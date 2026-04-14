@@ -19,15 +19,65 @@ Replace this paragraph with your own summary of what your version does.
 
 Explain your design in plain language.
 
-Some prompts to answer:
+  - For this recommender system we factor in these features from songs:
+    - Genre
+    - Mood
+    - Energy
+    - acousticness
+    - danceability
+  - The UserProfile will store the users energy and mood, to help make the system based on the users current needs.
+  - The recommender computers a score by taking in the feature groups and assigning weights to each feature, then using Euclidean distance we can find the most similar songs.
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+  Weights table:
 
-You can include a simple diagram or bullet list if helpful.
+Feature group	  Type	        Points (max 10)
+genre	          categorical	  3.0
+mood	          categorical	  2.0
+energy	        continuous	  2.0
+danceability	  continuous	  1.5
+acousticness	  continuous	  1.5
+
+
+---
+
+## Algorithm Recipe
+
+  1. Load all songs from songs.csv into a list of dictionaries
+  2. Read the user's taste profile (genre, mood, target energy, target danceability, target acousticness)
+  3. For each song in the catalog:
+     a. Award 3.0 pts if the song's genre exactly matches the user's preferred genre
+     b. Award 2.0 pts if the song's mood exactly matches the user's preferred mood
+     c. Compute energy score:      2.0 × (1 − |song.energy − target_energy|)
+     d. Compute danceability score: 1.5 × (1 − |song.danceability − target_danceability|)
+     e. Compute acousticness score: 1.5 × (1 − |song.acousticness − target_acousticness|)
+     f. Sum all five values → total score (0–10)
+     g. Record (song, score, explanation)
+  4. Sort all scored songs from highest to lowest
+  5. Return the top K results (default K = 5)
+
+---
+
+## Potential Biases
+
+  - Genre dominance: with 3.0 pts, genre is the single biggest factor. A song that perfectly
+    matches the user's mood, energy, and danceability but belongs to the wrong genre will almost
+    always rank below a mediocre same-genre song. Great cross-genre discoveries get buried.
+
+  - Mood is all-or-nothing: mood is scored as an exact match, so "relaxed" and "chill" are
+    treated as completely different even though a listener might enjoy both. Near-synonyms get zero credit.
+
+  - Catalog skew: the 19-song dataset has more lofi/indie/pop songs than metal, classical, or
+    country. Users who prefer underrepresented genres will consistently receive lower top scores
+    simply because fewer songs are available to match them.
+
+  - No popularity or novelty signal: every song is treated equally regardless of how often it
+    has been liked or how recently it was added, which may not reflect what a real listener wants.
+
+---
+
+## Sample Output
+
+![Terminal output showing top 5 recommendations](Screenshot%202026-04-13%20at%209.24.11%20PM.png)
 
 ---
 
