@@ -81,6 +81,20 @@ acousticness	  continuous	  1.5
 
 ---
 
+## Terminal Tests
+
+Adversarial and edge-case profiles run against the recommender to probe scoring behavior.
+
+**Profiles 1 & 2** — Contradictory Categorical + Continuous, and Out-of-Range Target Values:
+
+![Terminal test output profiles 1 and 2](terminal_test/Screenshot%202026-04-13%20at%2010.13.02%20PM.png)
+
+**Profile 3** — Ghost Genre (No Categorical Bonus Ever):
+
+![Terminal test output profile 3](terminal_test/Screenshot%202026-04-13%20at%2010.13.10%20PM.png)
+
+---
+
 ## Getting Started
 
 ### Setup

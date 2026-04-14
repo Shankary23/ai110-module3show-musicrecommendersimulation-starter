@@ -31,18 +31,19 @@ class UserProfile:
     likes_acoustic: bool
 
 # ── Weighting constants ──────────────────────────────────────────────────────
-# Genre is the broadest filter: playing metal for a jazz fan breaks the
-# experience immediately, so it earns the highest single-match bonus.
-# Mood is the emotional reason a listener picks a song — second most decisive.
-# Energy, danceability, and acousticness are continuous: a song that is *close*
+# Energy is now the dominant continuous signal: how hard or soft a song hits
+# is the most decisive moment-to-moment factor for this experiment.
+# Genre and mood are still rewarded on exact match but carry less weight,
+# reflecting that near-energy matches matter more than categorical alignment.
+# Danceability and acousticness are continuous: a song that is *close*
 # to the target still earns most of its points, rewarding near-matches
 # rather than punishing them entirely.
-WEIGHT_GENRE        = 3.0   # exact match bonus
-WEIGHT_MOOD         = 2.0   # exact match bonus
-WEIGHT_ENERGY       = 2.0   # max points, scaled by 1 - |delta|
+WEIGHT_GENRE        = 1.5   # exact match bonus  (was 3.0)
+WEIGHT_MOOD         = 1.5   # exact match bonus  (was 2.0)
+WEIGHT_ENERGY       = 4.0   # max points, scaled by 1 - |delta|  (was 2.0)
 WEIGHT_DANCEABILITY = 1.5   # max points, scaled by 1 - |delta|
 WEIGHT_ACOUSTICNESS = 1.5   # max points, scaled by 1 - |delta|
-# Total max score: 10.0
+# Total max score: 10.0  (1.5 + 1.5 + 4.0 + 1.5 + 1.5 = 10.0)
 
 
 def _score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
@@ -50,9 +51,9 @@ def _score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     Score a single song against user preferences.
 
     Algorithm recipe:
-      Step 3a — genre match:       +3.0 pts (exact)
-      Step 3b — mood match:        +2.0 pts (exact)
-      Step 3c — energy proximity:  +0–2.0   (1 − |delta|)
+      Step 3a — genre match:       +1.5 pts (exact)
+      Step 3b — mood match:        +1.5 pts (exact)
+      Step 3c — energy proximity:  +0–4.0   (1 − |delta|)
       Step 3d — dance proximity:   +0–1.5   (1 − |delta|)
       Step 3e — acous proximity:   +0–1.5   (1 − |delta|)
 
@@ -167,16 +168,16 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
     Required by src/main.py
 
     Scoring weights (max 10 pts total):
-      Genre match        3.0 pts  — categorical, exact
-      Mood match         2.0 pts  — categorical, exact
-      Energy proximity   2.0 pts  — continuous, 1 - |delta|
+      Genre match        1.5 pts  — categorical, exact  (was 3.0)
+      Mood match         1.5 pts  — categorical, exact  (was 2.0)
+      Energy proximity   4.0 pts  — continuous, 1 - |delta|  (was 2.0)
       Danceability prox. 1.5 pts  — continuous, 1 - |delta|
       Acousticness prox. 1.5 pts  — continuous, 1 - |delta|
 
-    Genre earns the highest single bonus because mismatching it (e.g. metal
-    for a jazz fan) is the most jarring error a recommender can make. Mood
-    is second because it drives why a listener picks a song in that moment.
-    Continuous features use proximity so near-matches are still rewarded.
+    Energy now earns the highest weight in this experiment, emphasising
+    moment-to-moment feel over categorical genre/mood alignment. Genre and
+    mood are still rewarded on exact match but at reduced values. Continuous
+    features use proximity so near-matches are still rewarded.
     """
     scored = sorted(
         [(song, *_score_song(user_prefs, song)) for song in songs],
